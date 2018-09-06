@@ -1,6 +1,6 @@
 import React, { Component, Fragment } from 'react';
 
-import { mockedPolls } from './mockedPolls';
+import { mockedData } from './mockedPolls';
 import './index.css';
 import { Poll } from './Poll';
 import { Form } from './Form';
@@ -8,7 +8,8 @@ import { Form } from './Form';
 class App extends Component {
   state = {
     loading: false,
-    polls: mockedPolls,
+    polls: mockedData.polls,
+    votes: mockedData.votes,
   };
 
   componentDidMount = () => {
@@ -18,45 +19,48 @@ class App extends Component {
         'Content-Type': 'application/json',
       },
     })
-      .then(polls => polls.json())
-      .then(polls => this.setState({ polls, loading: false }))
+      .then(data => data.json())
+      .then(data =>
+        this.setState({ polls: data.polls, votes: data.votes, loading: false })
+      )
       .catch(error => console.log('Request failed', error));
   };
 
-  increment = (voteId, pollId) =>
-    this.setState(state => {
-      const poll = state.polls.find(poll => poll.id === pollId);
-      const newVote = poll.votes.find(vote => vote.id === voteId);
+  addPoll = ({ poll, votes }) => {
+    this.setState(state => ({
+      polls: [...state.polls, poll],
+      votes: [...state.votes, ...votes],
+    }));
+    // todo API POST
+  };
 
-      newVote.score++;
-      poll.votes = [...poll.votes.filter(vote => vote.id !== voteId), newVote];
+  removePoll = id => {
+    this.setState(state => ({
+      polls: state.polls.filter(poll => poll.id !== id),
+      votes: state.votes.filter(vote => vote.pollId !== id),
+    }));
+    // todo API DELETE
+  };
 
-      return {
-        polls: [...state.polls.filter(poll => poll.id !== pollId), poll],
-      };
+  vote = ({ pollId, voteId }) => {
+    const votes = this.state.votes.map(
+      vote =>
+        vote.id === voteId && vote.pollId === pollId
+          ? { ...vote, score: vote.score + 1 }
+          : vote
+    );
+
+    this.setState({
+      votes,
     });
-
-  addPoll = poll => {
-    this.setState(prevState => {
-      const { question } = poll;
-
-      const newPoll = {
-        id: Math.floor(Math.random() * 1000000), // xD
-        question,
-        votes: [],
-      };
-
-      const polls = [...prevState.polls, newPoll];
-      return { polls };
-    });
-    // POST new poll in `api/poll`
+    // todo API vote
   };
 
   render() {
     const { loading, polls } = this.state;
     return (
       <Fragment>
-        <div className="conatiner">
+        <div className="container">
           <h1>Polls</h1>
           <ul>
             {loading ? (
@@ -65,11 +69,20 @@ class App extends Component {
                 alt="Loading..."
               />
             ) : (
-              polls
-                .sort((a, b) => a.id > b.id)
-                .map(poll => (
-                  <Poll poll={poll} key={poll.id} increment={this.increment} />
-                ))
+              polls.map(poll => {
+                const votes = this.state.votes.filter(
+                  vote => vote.pollId === poll.id
+                );
+                return (
+                  <Poll
+                    poll={poll}
+                    votes={votes}
+                    key={poll.id}
+                    vote={this.vote}
+                    removePoll={this.removePoll}
+                  />
+                );
+              })
             )}
           </ul>
 
