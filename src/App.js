@@ -1,37 +1,52 @@
 import React, { Component, Fragment } from 'react';
 
-import { mockedData } from './mockedPolls';
+import { polls, votes } from './mockedPolls';
 import './index.css';
 import { Poll } from './Poll';
 import { Form } from './Form';
 
 class App extends Component {
   state = {
-    loading: false,
-    polls: mockedData.polls,
-    votes: mockedData.votes,
+    polls,
+    votes,
   };
 
   componentDidMount = () => {
-    fetch('http://skygate.io/api/polls', {
-      method: 'get',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
+    fetch('https://skygate.io/api/polls')
       .then(data => data.json())
-      .then(data =>
-        this.setState({ polls: data.polls, votes: data.votes, loading: false })
-      )
+      .then(results => {
+        const votes = results.reduce((acc, cur) => {
+          return [...cur.votes, ...acc];
+        }, []);
+
+        // const votes = [];
+        // results.map(poll => {
+        //   votes.push(...poll.votes);
+        // });
+
+        this.setState({ polls: results, loading: false, votes });
+      })
+
       .catch(error => console.log('Request failed', error));
   };
 
   addPoll = ({ poll, votes }) => {
-    this.setState(state => ({
-      polls: [...state.polls, poll],
-      votes: [...state.votes, ...votes],
-    }));
-    // todo API POST
+    fetch('https://skygate.io/api/poll', {
+      method: 'POST',
+      body: JSON.stringify({
+        question: poll.question,
+        votes: votes.map(({ name }) => ({
+          name,
+        })),
+      }),
+    })
+      .then(res => res.json())
+      .then(res => {
+        this.setState(state => ({
+          polls: [...state.polls, res],
+          votes: [...state.votes, ...res.votes],
+        }));
+      });
   };
 
   removePoll = id => {
@@ -39,7 +54,12 @@ class App extends Component {
       polls: state.polls.filter(poll => poll.id !== id),
       votes: state.votes.filter(vote => vote.pollId !== id),
     }));
-    // todo API DELETE
+    fetch(
+      `https://cors-anywhere.herokuapp.com/https://skygate.io/api/polls/${id}`,
+      {
+        method: 'DELETE',
+      }
+    );
   };
 
   vote = ({ pollId, voteId }) => {
@@ -50,10 +70,14 @@ class App extends Component {
           : vote
     );
 
+    fetch(`https://skygate.io/api/polls/${pollId}/votes/${voteId}`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    });
+
     this.setState({
       votes,
     });
-    // todo API vote
   };
 
   render() {
@@ -69,6 +93,7 @@ class App extends Component {
                 alt="Loading..."
               />
             ) : (
+
               polls.map(poll => {
                 const votes = this.state.votes.filter(
                   vote => vote.pollId === poll.id

@@ -1,50 +1,43 @@
-export const mockedData = {
-  polls: [
-    {
-      id: 1,
-      question: 'Do You like cats?',
-    },
-    {
-      id: 2,
-      question: 'Do You like dogs?',
-      votes: [
-        {
-          id: 1,
-          score: 0,
-          name: 'Yes!',
-        },
-        {
-          id: 2,
-          score: 0,
-          name: 'No!',
-        },
-      ],
-    },
-  ],
-  votes: [
-    {
-      id: 1,
-      pollId: 1,
-      score: 5,
-      name: 'Yes!',
-    },
-    {
-      id: 2,
-      pollId: 1,
-      score: 3,
-      name: 'No!',
-    },
-    {
-      id: 3,
-      pollId: 2,
-      score: 12,
-      name: 'Yes!',
-    },
-    {
-      id: 4,
-      pollId: 2,
-      score: 1,
-      name: 'No!',
-    },
-  ],
-};
+export const polls = [
+  {
+    id: 1,
+    question: 'Do you like JS?',
+  },
+  {
+    id: 2,
+    question: 'Your favourite meal',
+  },
+];
+
+export const votes = [
+  {
+    id: 1,
+    name: 'Yes',
+    votes: 39,
+    pollId: 1,
+  },
+  {
+    id: 2,
+    name: 'Of course',
+    votes: 28,
+    pollId: 1,
+  },
+  {
+    id: 1,
+    name: 'Pizza',
+    votes: 19,
+    pollId: 2,
+  },
+  {
+    id: 2,
+    name: 'Donuts',
+    votes: 2,
+    pollId: 2,
+  },
+  {
+    id: 3,
+    name: 'Kiwi',
+    votes: 7,
+    pollId: 2,
+  },
+];
